@@ -12,28 +12,29 @@ body{
 font-family:Arial;
 background:#0f172a;
 color:white;
+margin:0;
 text-align:center;
+}
+
+header{
+background:#020617;
+padding:20px;
+font-size:24px;
+}
+
+.page{
+display:none;
 padding:40px;
 }
 
-#game{
-max-width:900px;
-margin:auto;
-background:#1e293b;
-padding:30px;
-border-radius:12px;
-}
-
 button{
-display:block;
-width:100%;
-margin:10px 0;
-padding:15px;
-font-size:16px;
+padding:12px 20px;
+margin:10px;
 border:none;
 border-radius:8px;
 background:#22c55e;
 color:white;
+font-size:16px;
 cursor:pointer;
 }
 
@@ -41,13 +42,27 @@ button:hover{
 background:#16a34a;
 }
 
+#gamebox{
+max-width:800px;
+margin:auto;
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+}
+
 .stats{
 margin-top:20px;
 font-size:18px;
 }
 
-#leaderboard{
-margin-top:40px;
+table{
+margin:auto;
+border-collapse:collapse;
+}
+
+td,th{
+border:1px solid white;
+padding:10px;
 }
 
 </style>
@@ -56,11 +71,34 @@ margin-top:40px;
 
 <body>
 
-<div id="game">
+<header>
+Youth Decision Lab
+</header>
 
-<h1>Youth Decision Lab</h1>
+<div id="home" class="page" style="display:block">
 
-<p id="story"></p>
+<h1>แพลตฟอร์มเกมจำลองการตัดสินใจของเยาวชน</h1>
+
+<button onclick="showPage('avatar')">เริ่มเกม</button>
+<button onclick="showPage('leaderboard')">ตารางคะแนนโรงเรียน</button>
+
+</div>
+
+<div id="avatar" class="page">
+
+<h2>เลือกตัวละคร</h2>
+
+<button onclick="selectAvatar('นักสำรวจ')">นักสำรวจ</button>
+<button onclick="selectAvatar('นักคิด')">นักคิด</button>
+<button onclick="selectAvatar('ผู้นำ')">ผู้นำ</button>
+
+</div>
+
+<div id="game" class="page">
+
+<div id="gamebox">
+
+<h2 id="story"></h2>
 
 <div id="choices"></div>
 
@@ -76,47 +114,75 @@ margin-top:40px;
 
 </div>
 
-<div id="report" style="display:none; margin-top:40px;">
+</div>
 
-<h2>รายงานการตัดสินใจของคุณ</h2>
+<div id="result" class="page">
 
-<canvas id="resultChart" width="400" height="200"></canvas>
+<h2>ผลการวิเคราะห์ผู้เล่น</h2>
+
+<canvas id="chart" width="400" height="200"></canvas>
 
 <h3 id="ending"></h3>
 
+<button onclick="location.reload()">เล่นอีกครั้ง</button>
+
 </div>
 
-<div id="leaderboard">
+<div id="leaderboard" class="page">
 
 <h2>School Leaderboard</h2>
 
-<table style="margin:auto;">
+<table>
 
 <tr>
 <th>โรงเรียน</th>
-<th>คะแนน</th>
+<th>คะแนนเฉลี่ย</th>
 </tr>
 
 <tr>
 <td>โรงเรียน A</td>
-<td>87</td>
+<td>90</td>
 </tr>
 
 <tr>
 <td>โรงเรียน B</td>
-<td>82</td>
+<td>84</td>
 </tr>
 
 <tr>
 <td>โรงเรียน C</td>
-<td>79</td>
+<td>80</td>
 </tr>
 
 </table>
 
+<br>
+
+<button onclick="showPage('home')">กลับหน้าแรก</button>
+
 </div>
 
 <script>
+
+function showPage(p){
+
+document.querySelectorAll(".page").forEach(e=>e.style.display="none")
+
+document.getElementById(p).style.display="block"
+
+}
+
+let avatar=""
+
+function selectAvatar(a){
+
+avatar=a
+
+showPage("game")
+
+startGame()
+
+}
 
 let health=100
 let decision=100
@@ -147,9 +213,9 @@ choices:[
 },
 
 {
-story:"เพื่อนถ่ายคลิปในงานปาร์ตี้เพื่อโพสต์",
+story:"มีคนไลฟ์สดในงานปาร์ตี้",
 choices:[
-{text:"ร่วมถ่าย",effect:()=>{risk+=10}},
+{text:"ร่วมไลฟ์",effect:()=>{risk+=10}},
 {text:"เตือนเพื่อน",effect:()=>{decision+=5}},
 {text:"ออกจากสถานการณ์",effect:()=>{health+=5}}
 ]
@@ -185,13 +251,20 @@ document.getElementById("risk").innerText=risk
 
 }
 
+function startGame(){
+
+showScene()
+
+}
+
 function showScene(){
 
 if(step>=scenes.length){
 
-finishGame()
+finish()
 
 return
+
 }
 
 let s=scenes[step]
@@ -226,11 +299,9 @@ cDiv.appendChild(btn)
 
 }
 
-function finishGame(){
+function finish(){
 
-document.getElementById("game").style.display="none"
-
-document.getElementById("report").style.display="block"
+showPage("result")
 
 let ending=""
 
@@ -239,9 +310,9 @@ else if(risk<40) ending="Balanced Social Life"
 else if(risk<60) ending="Peer Follower"
 else ending="Risk Taker"
 
-document.getElementById("ending").innerText="ผลลัพธ์: "+ending
+document.getElementById("ending").innerText="ผลลัพธ์ของ "+avatar+" : "+ending
 
-let ctx=document.getElementById("resultChart")
+let ctx=document.getElementById("chart")
 
 new Chart(ctx,{
 
@@ -250,7 +321,7 @@ type:"radar",
 data:{
 labels:["Health","Decision","Social","Responsibility","Risk"],
 datasets:[{
-label:"Your Profile",
+label:"Profile",
 data:[health,decision,social,responsibility,100-risk]
 }]
 }
@@ -258,8 +329,6 @@ data:[health,decision,social,responsibility,100-risk]
 })
 
 }
-
-showScene()
 
 </script>
 
