@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Life Choice Game</title>
+
+<style>
+body{
+font-family:sans-serif;
+background:#1e1e2f;
+color:white;
+text-align:center;
+padding:40px;
+}
+
+#game{
+max-width:600px;
+margin:auto;
+background:#2b2b40;
+padding:30px;
+border-radius:10px;
+}
+
+button{
+display:block;
+width:100%;
+margin:10px 0;
+padding:15px;
+font-size:16px;
+border:none;
+border-radius:8px;
+background:#4CAF50;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#66bb6a;
+}
+
+.stats{
+margin-top:20px;
+font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<h1>Life Choice</h1>
+<p id="story"></p>
+
+<div id="choices"></div>
+
+<div class="stats">
+สุขภาพ ❤️ : <span id="health">100</span><br>
+อนาคต 🎓 : <span id="future">100</span>
+</div>
+
+</div>
+
+<script>
+
+let health = 100
+let future = 100
+let step = 0
+
+const story = document.getElementById("story")
+const choices = document.getElementById("choices")
+
+function updateStats(){
+document.getElementById("health").innerText = health
+document.getElementById("future").innerText = future
+}
+
+function showChoices(options){
+choices.innerHTML=""
+
+options.forEach(option=>{
+let btn=document.createElement("button")
+btn.innerText=option.text
+btn.onclick=option.action
+choices.appendChild(btn)
+})
+}
+
+function startGame(){
+
+story.innerText="เพื่อนชวนคุณไปงานปาร์ตี้คืนนี้ คุณจะทำอย่างไร?"
+
+showChoices([
+{
+text:"ไปงานปาร์ตี้",
+action:party
+},
+{
+text:"ไม่ไป อยู่บ้านอ่านหนังสือ",
+action:safeEnding
+}
+])
+
+}
+
+function party(){
+
+story.innerText="ในงานปาร์ตี้ เพื่อนยื่นเบียร์ให้คุณ"
+
+showChoices([
+{
+text:"ดื่มเบียร์",
+action:drink
+},
+{
+text:"ปฏิเสธ",
+action:refuse
+}
+])
+
+}
+
+function drink(){
+
+health -= 20
+future -= 10
+updateStats()
+
+story.innerText="คุณเริ่มมึน เพื่อนชวนขับรถกลับบ้าน"
+
+showChoices([
+{
+text:"ขับรถเอง",
+action:badEnding
+},
+{
+text:"เรียกแท็กซี่",
+action:taxi
+}
+])
+
+}
+
+function refuse(){
+
+story.innerText="คุณปฏิเสธ เพื่อนบางคนเริ่มเคารพการตัดสินใจของคุณ"
+
+showChoices([
+{
+text:"ชวนเพื่อนเล่นเกมแทน",
+action:goodEnding
+}
+])
+
+}
+
+function taxi(){
+
+future -= 5
+updateStats()
+
+story.innerText="คุณกลับบ้านปลอดภัย"
+
+showChoices([
+{
+text:"จบเกม",
+action:restart
+}
+])
+
+}
+
+function badEnding(){
+
+health -= 40
+future -= 40
+updateStats()
+
+story.innerText="เกิดอุบัติเหตุ 🚨 ชีวิตคุณเปลี่ยนไป"
+
+showChoices([
+{
+text:"เริ่มใหม่",
+action:restart
+}
+])
+
+}
+
+function goodEnding(){
+
+future += 10
+updateStats()
+
+story.innerText="คุณสนุกกับเพื่อนโดยไม่ต้องดื่มแอลกอฮอล์ 🎉"
+
+showChoices([
+{
+text:"เล่นอีกครั้ง",
+action:restart
+}
+])
+
+}
+
+function safeEnding(){
+
+future += 5
+updateStats()
+
+story.innerText="คุณใช้เวลาอย่างมีประโยชน์"
+
+showChoices([
+{
+text:"เล่นอีกครั้ง",
+action:restart
+}
+])
+
+}
+
+function restart(){
+health = 100
+future = 100
+updateStats()
+startGame()
+}
+
+startGame()
+
+</script>
+
+</body>
+</html>
