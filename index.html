@@ -2,23 +2,26 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Life Choice Game</title>
+<title>Youth Decision Lab</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 body{
-font-family:sans-serif;
-background:#1e1e2f;
+font-family:Arial;
+background:#0f172a;
 color:white;
 text-align:center;
 padding:40px;
 }
 
 #game{
-max-width:600px;
+max-width:900px;
 margin:auto;
-background:#2b2b40;
+background:#1e293b;
 padding:30px;
-border-radius:10px;
+border-radius:12px;
 }
 
 button{
@@ -29,204 +32,234 @@ padding:15px;
 font-size:16px;
 border:none;
 border-radius:8px;
-background:#4CAF50;
+background:#22c55e;
 color:white;
 cursor:pointer;
 }
 
 button:hover{
-background:#66bb6a;
+background:#16a34a;
 }
 
 .stats{
 margin-top:20px;
 font-size:18px;
 }
+
+#leaderboard{
+margin-top:40px;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div id="game">
 
-<h1>Life Choice</h1>
+<h1>Youth Decision Lab</h1>
+
 <p id="story"></p>
 
 <div id="choices"></div>
 
 <div class="stats">
-สุขภาพ ❤️ : <span id="health">100</span><br>
-อนาคต 🎓 : <span id="future">100</span>
+
+❤️ Health <span id="health">100</span> |
+🧠 Decision <span id="decision">100</span> |
+👥 Social <span id="social">100</span> |
+🛡 Responsibility <span id="responsibility">100</span> |
+⚠ Risk <span id="risk">0</span>
+
 </div>
+
+</div>
+
+<div id="report" style="display:none; margin-top:40px;">
+
+<h2>รายงานการตัดสินใจของคุณ</h2>
+
+<canvas id="resultChart" width="400" height="200"></canvas>
+
+<h3 id="ending"></h3>
+
+</div>
+
+<div id="leaderboard">
+
+<h2>School Leaderboard</h2>
+
+<table style="margin:auto;">
+
+<tr>
+<th>โรงเรียน</th>
+<th>คะแนน</th>
+</tr>
+
+<tr>
+<td>โรงเรียน A</td>
+<td>87</td>
+</tr>
+
+<tr>
+<td>โรงเรียน B</td>
+<td>82</td>
+</tr>
+
+<tr>
+<td>โรงเรียน C</td>
+<td>79</td>
+</tr>
+
+</table>
 
 </div>
 
 <script>
 
-let health = 100
-let future = 100
-let step = 0
+let health=100
+let decision=100
+let social=100
+let responsibility=100
+let risk=0
 
-const story = document.getElementById("story")
-const choices = document.getElementById("choices")
+let step=0
+
+const scenes=[
+
+{
+story:"เพื่อนชวนคุณไปงานปาร์ตี้ก่อนสอบ",
+choices:[
+{text:"ไปแต่ไม่ดื่ม",effect:()=>{social+=5}},
+{text:"ดื่มเล็กน้อย",effect:()=>{risk+=10;health-=5}},
+{text:"ไม่ไป",effect:()=>{decision+=5}}
+]
+},
+
+{
+story:"เพื่อนเมาและจะขับรถกลับ",
+choices:[
+{text:"ปล่อยเขาไป",effect:()=>{risk+=40}},
+{text:"เรียกแท็กซี่",effect:()=>{responsibility+=10}},
+{text:"เอากุญแจรถเขา",effect:()=>{social-=5;risk-=10}}
+]
+},
+
+{
+story:"เพื่อนถ่ายคลิปในงานปาร์ตี้เพื่อโพสต์",
+choices:[
+{text:"ร่วมถ่าย",effect:()=>{risk+=10}},
+{text:"เตือนเพื่อน",effect:()=>{decision+=5}},
+{text:"ออกจากสถานการณ์",effect:()=>{health+=5}}
+]
+},
+
+{
+story:"เพื่อนสนิทเริ่มดื่มหนักเพราะเครียด",
+choices:[
+{text:"ปล่อยเขา",effect:()=>{risk+=10}},
+{text:"ชวนทำกิจกรรมอื่น",effect:()=>{responsibility+=10}},
+{text:"คุยจริงจังกับเขา",effect:()=>{decision+=10}}
+]
+},
+
+{
+story:"เพื่อนกดดันว่าถ้าไม่ดื่มแปลว่าไม่ใช่เพื่อน",
+choices:[
+{text:"ดื่มเพื่อรักษามิตรภาพ",effect:()=>{risk+=20}},
+{text:"ปฏิเสธอย่างสุภาพ",effect:()=>{decision+=10}},
+{text:"เปลี่ยนหัวข้อคุย",effect:()=>{social+=5}}
+]
+}
+
+]
 
 function updateStats(){
-document.getElementById("health").innerText = health
-document.getElementById("future").innerText = future
+
+document.getElementById("health").innerText=health
+document.getElementById("decision").innerText=decision
+document.getElementById("social").innerText=social
+document.getElementById("responsibility").innerText=responsibility
+document.getElementById("risk").innerText=risk
+
 }
 
-function showChoices(options){
-choices.innerHTML=""
+function showScene(){
 
-options.forEach(option=>{
+if(step>=scenes.length){
+
+finishGame()
+
+return
+}
+
+let s=scenes[step]
+
+document.getElementById("story").innerText=s.story
+
+let cDiv=document.getElementById("choices")
+
+cDiv.innerHTML=""
+
+s.choices.forEach(c=>{
+
 let btn=document.createElement("button")
-btn.innerText=option.text
-btn.onclick=option.action
-choices.appendChild(btn)
+
+btn.innerText=c.text
+
+btn.onclick=()=>{
+
+c.effect()
+
+updateStats()
+
+step++
+
+showScene()
+
+}
+
+cDiv.appendChild(btn)
+
 })
-}
-
-function startGame(){
-
-story.innerText="เพื่อนชวนคุณไปงานปาร์ตี้คืนนี้ คุณจะทำอย่างไร?"
-
-showChoices([
-{
-text:"ไปงานปาร์ตี้",
-action:party
-},
-{
-text:"ไม่ไป อยู่บ้านอ่านหนังสือ",
-action:safeEnding
-}
-])
 
 }
 
-function party(){
+function finishGame(){
 
-story.innerText="ในงานปาร์ตี้ เพื่อนยื่นเบียร์ให้คุณ"
+document.getElementById("game").style.display="none"
 
-showChoices([
-{
-text:"ดื่มเบียร์",
-action:drink
-},
-{
-text:"ปฏิเสธ",
-action:refuse
+document.getElementById("report").style.display="block"
+
+let ending=""
+
+if(risk<20) ending="Healthy Decision Maker"
+else if(risk<40) ending="Balanced Social Life"
+else if(risk<60) ending="Peer Follower"
+else ending="Risk Taker"
+
+document.getElementById("ending").innerText="ผลลัพธ์: "+ending
+
+let ctx=document.getElementById("resultChart")
+
+new Chart(ctx,{
+
+type:"radar",
+
+data:{
+labels:["Health","Decision","Social","Responsibility","Risk"],
+datasets:[{
+label:"Your Profile",
+data:[health,decision,social,responsibility,100-risk]
+}]
 }
-])
 
-}
-
-function drink(){
-
-health -= 20
-future -= 10
-updateStats()
-
-story.innerText="คุณเริ่มมึน เพื่อนชวนขับรถกลับบ้าน"
-
-showChoices([
-{
-text:"ขับรถเอง",
-action:badEnding
-},
-{
-text:"เรียกแท็กซี่",
-action:taxi
-}
-])
+})
 
 }
 
-function refuse(){
-
-story.innerText="คุณปฏิเสธ เพื่อนบางคนเริ่มเคารพการตัดสินใจของคุณ"
-
-showChoices([
-{
-text:"ชวนเพื่อนเล่นเกมแทน",
-action:goodEnding
-}
-])
-
-}
-
-function taxi(){
-
-future -= 5
-updateStats()
-
-story.innerText="คุณกลับบ้านปลอดภัย"
-
-showChoices([
-{
-text:"จบเกม",
-action:restart
-}
-])
-
-}
-
-function badEnding(){
-
-health -= 40
-future -= 40
-updateStats()
-
-story.innerText="เกิดอุบัติเหตุ 🚨 ชีวิตคุณเปลี่ยนไป"
-
-showChoices([
-{
-text:"เริ่มใหม่",
-action:restart
-}
-])
-
-}
-
-function goodEnding(){
-
-future += 10
-updateStats()
-
-story.innerText="คุณสนุกกับเพื่อนโดยไม่ต้องดื่มแอลกอฮอล์ 🎉"
-
-showChoices([
-{
-text:"เล่นอีกครั้ง",
-action:restart
-}
-])
-
-}
-
-function safeEnding(){
-
-future += 5
-updateStats()
-
-story.innerText="คุณใช้เวลาอย่างมีประโยชน์"
-
-showChoices([
-{
-text:"เล่นอีกครั้ง",
-action:restart
-}
-])
-
-}
-
-function restart(){
-health = 100
-future = 100
-updateStats()
-startGame()
-}
-
-startGame()
+showScene()
 
 </script>
 
